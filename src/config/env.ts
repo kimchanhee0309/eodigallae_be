@@ -1,11 +1,20 @@
 import "dotenv/config";
+import { z } from "zod";
 
-const port = Number(process.env.PORT ?? "4000");
+const envSchema = z.object({
+  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+});
 
-if (!Number.isInteger(port) || port < 1 || port > 65535) {
-  throw new Error("PORT는 1~65535 사이의 정수여야 합니다.");
+const result = envSchema.safeParse(process.env);
+
+if (!result.success) {
+  const invalidFields = result.error.issues.map((issue) =>
+    issue.path.join("."),
+  );
+
+  throw new Error(`환경변수 설정을 확인해주세요: ${invalidFields.join(", ")}`);
 }
 
 export const env = {
-  port,
+  port: result.data.PORT,
 };
