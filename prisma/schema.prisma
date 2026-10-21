@@ -10,12 +10,55 @@ datasource db {
   provider = "postgresql"
 }
 
+enum RoomStatus {
+  OPEN
+  FINALIZED
+}
+
+enum ParticipantRole {
+  HOST
+  MEMBER
+}
+
 model Room {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @db.VarChar(40)
-  description String   @default("") @db.VarChar(300)
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  id              String     @id @default(uuid()) @db.Uuid
+  name            String     @db.VarChar(40)
+  description     String     @default("") @db.VarChar(300)
+  status          RoomStatus @default(OPEN)
+  inviteTokenHash String     @unique @db.VarChar(64)
+  createdAt       DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @db.Timestamptz(3)
+
+  participants Participant[]
 
   @@map("rooms")
+}
+
+model Participant {
+  id        String          @id @default(uuid()) @db.Uuid
+  roomId    String          @db.Uuid
+  nickname  String          @db.VarChar(12)
+  role      ParticipantRole @default(MEMBER)
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+
+  room     Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sessions ParticipantSession[]
+
+  // 방장 중복 방지용 부분 유니크 인덱스는 migration.sql에서 관리합니다.
+  @@index([roomId])
+  @@map("participants")
+}
+
+model ParticipantSession {
+  id            String   @id @default(uuid()) @db.Uuid
+  participantId String   @db.Uuid
+  tokenHash     String   @unique @db.VarChar(64)
+  expiresAt     DateTime @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([participantId])
+  @@index([expiresAt])
+  @@map("participant_sessions")
 }

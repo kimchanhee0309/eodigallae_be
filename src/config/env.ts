@@ -12,6 +12,12 @@ const envSchema = z.object({
         value.startsWith("postgresql://") || value.startsWith("postgres://"),
       "PostgreSQL 연결 URL이어야 합니다.",
     ),
+
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+
+  FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
 });
 
 const result = envSchema.safeParse(process.env);
@@ -27,4 +33,6 @@ if (!result.success) {
 export const env = {
   port: result.data.PORT,
   databaseUrl: result.data.DATABASE_URL,
+  nodeEnv: result.data.NODE_ENV,
+  frontendOrigin: new URL(result.data.FRONTEND_ORIGIN).origin,
 };
