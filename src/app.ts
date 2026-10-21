@@ -1,5 +1,6 @@
 import express from "express";
 
+import { corsMiddleware } from "./middlewares/cors.js";
 import { AppError } from "./errors/AppError.js";
 import { errorHandler } from "./middlewares/error-handler.js";
 import healthRouter from "./routes/health.routes.js";
@@ -8,6 +9,8 @@ import roomRouter from "./routes/room.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
+
+app.use(corsMiddleware);
 
 app.use(express.json({ limit: "10kb" }));
 app.use("/api/health", healthRouter);
