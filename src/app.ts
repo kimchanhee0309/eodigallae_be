@@ -1,5 +1,7 @@
 import express from "express";
 
+import cookieParser from "cookie-parser";
+
 import { corsMiddleware } from "./middlewares/cors.js";
 import { AppError } from "./errors/AppError.js";
 import { errorHandler } from "./middlewares/error-handler.js";
@@ -11,6 +13,7 @@ const app = express();
 app.disable("x-powered-by");
 
 app.use(corsMiddleware);
+app.use(cookieParser());
 
 app.use(express.json({ limit: "10kb" }));
 app.use("/api/health", healthRouter);

@@ -1,8 +1,10 @@
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { SESSION_TTL_MS } from "../config/session.ts";
+import { AppError } from "../errors/AppError.js";
 
 import {
+  findRoomById,
   insertHostParticipant,
   insertParticipantSession,
   insertRoom,
@@ -57,5 +59,22 @@ export async function createRoom(input: CreateRoomInput) {
     participant: result.participant,
     inviteUrl: inviteUrl.toString(),
     sessionToken,
+  };
+}
+
+export async function getRoomDetail(roomId: string) {
+  const room = await findRoomById(roomId);
+
+  if (!room) {
+    throw new AppError(404, "ROOM_NOT_FOUND", "모임을 찾을 수 없습니다.");
+  }
+
+  return {
+    id: room.id,
+    name: room.name,
+    description: room.description,
+    status: room.status,
+    createdAt: room.createdAt,
+    participantCount: room._count.participants,
   };
 }

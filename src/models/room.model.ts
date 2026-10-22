@@ -1,4 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.js";
+import { prisma } from "../config/db.js";
 
 type CreateRoomData = {
   name: string;
@@ -52,6 +53,28 @@ export function insertParticipantSession(
     data,
     select: {
       id: true,
+    },
+  });
+}
+
+export function findRoomById(roomId: string) {
+  return prisma.room.findUnique({
+    where: {
+      id: roomId,
+    },
+
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      status: true,
+      createdAt: true,
+
+      _count: {
+        select: {
+          participants: true,
+        },
+      },
     },
   });
 }
