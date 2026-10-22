@@ -3,8 +3,10 @@ import { env } from "../config/env.js";
 import { getRoomSessionCookieName, SESSION_TTL_MS } from "../config/session.js";
 
 import { AppError } from "../errors/AppError.js";
-import { createRoom } from "../services/room.service.js";
+import { createRoom, getRoomDetail } from "../services/room.service.js";
 import { createRoomSchema } from "../validators/room.schema.js";
+
+import type { RoomAuth } from "../services/session.service.js";
 
 export const createRoomController: RequestHandler = async (req, res) => {
   if (!req.is("application/json")) {
@@ -33,6 +35,27 @@ export const createRoomController: RequestHandler = async (req, res) => {
       room: result.room,
       participant: result.participant,
       inviteUrl: result.inviteUrl,
+    },
+  });
+};
+
+export const getRoomController: RequestHandler = async (_req, res) => {
+  const auth = res.locals.roomAuth as RoomAuth | undefined;
+
+  if (!auth) {
+    throw new AppError(
+      500,
+      "AUTH_CONTEXT_MISSING",
+      "요청을 처리하지 못했습니다.",
+    );
+  }
+
+  const room = await getRoomDetail(auth.roomId);
+
+  res.status(200).json({
+    data: {
+      room,
+      me: auth.participant,
     },
   });
 };

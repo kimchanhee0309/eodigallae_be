@@ -21,3 +21,7 @@ export const createRoomSchema = z.strictObject({
 });
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
+
+export const roomParamSchema = z.object({
+  roomId: z.string().uuid("올바른 모임 ID가 아닙니다."),
+});
