@@ -78,3 +78,28 @@ export function findRoomById(roomId: string) {
     },
   });
 }
+
+export async function lockRoomForUpdate(
+  tx: Prisma.TransactionClient,
+  roomId: string,
+) {
+  await tx.$queryRaw`
+  SELECT "id"
+  FROM "public"."rooms"
+  WHERE "id" = ${roomId}::uuid
+  FOR UPDATE`;
+
+  return tx.room.findUnique({
+    where: {
+      id: roomId,
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      status: true,
+      createdAt: true,
+      inviteTokenHash: true,
+    },
+  });
+}

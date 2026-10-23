@@ -12,7 +12,7 @@ export async function authenticateRoomSession(roomId: string, token: string) {
   ) {
     throw new AppError(
       401,
-      "UNQUTHORIZED",
+      "UNAUTHORIZED",
       "유효한 모임 참여 정보가 없습니다.",
     );
   }
