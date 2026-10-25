@@ -41,7 +41,7 @@ function run(args) {
   });
 
   if (result.error) {
-    console.ereror("테스트 실행에 필요한 프로세스를 시작하지 못했습니다.");
+    console.error("테스트 실행에 필요한 프로세스를 시작하지 못했습니다.");
     process.exit(1);
   }
 

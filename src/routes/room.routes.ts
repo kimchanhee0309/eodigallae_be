@@ -6,6 +6,11 @@ import {
 import { joinRoomController } from "../controllers/participation.controller.js";
 import { rotateInviteController } from "../controllers/invitation.controller.js";
 
+import {
+  createCandidateController,
+  getCandidatesController,
+} from "../controllers/candidate.controller.js";
+
 import { requireRoomParticipant } from "../middlewares/require-room-participant.js";
 import { requireFrontendOrigin } from "../middlewares/require-frontend-origin.js";
 
@@ -20,5 +25,15 @@ roomRouter.post(
   requireRoomParticipant,
   rotateInviteController,
 );
-
+roomRouter.post(
+  "/:roomId/candidates",
+  requireFrontendOrigin,
+  requireRoomParticipant,
+  createCandidateController,
+);
+roomRouter.get(
+  "/:roomId/candidates",
+  requireRoomParticipant,
+  getCandidatesController,
+);
 export default roomRouter;
