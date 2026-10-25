@@ -30,6 +30,7 @@ model Room {
   updatedAt       DateTime   @updatedAt @db.Timestamptz(3)
 
   participants Participant[]
+  candidates   PlaceCandidate[]
 
   @@map("rooms")
 }
@@ -41,8 +42,9 @@ model Participant {
   role      ParticipantRole @default(MEMBER)
   createdAt DateTime        @default(now()) @db.Timestamptz(3)
 
-  room     Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  sessions ParticipantSession[]
+  room       Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sessions   ParticipantSession[]
+  candidates PlaceCandidate[]
 
   // 방장 중복 방지용 부분 유니크 인덱스는 migration.sql에서 관리합니다.
   @@index([roomId])
@@ -61,4 +63,23 @@ model ParticipantSession {
   @@index([participantId])
   @@index([expiresAt])
   @@map("participant_sessions")
+}
+
+model PlaceCandidate {
+  id          String   @id @default(uuid()) @db.Uuid
+  roomId      String   @db.Uuid
+  createdById String   @db.Uuid
+  name        String   @db.VarChar(100)
+  address     String   @db.VarChar(200)
+  mapUrl      String?  @db.VarChar(2000)
+  memo        String   @default("") @db.VarChar(300)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  room      Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy Participant @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([roomId, createdAt, id])
+  @@index([createdById])
+  @@map("place_candidates")
 }
