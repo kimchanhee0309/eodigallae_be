@@ -19,6 +19,8 @@ import {
   setVoteController,
 } from "../controllers/vote.controller.js";
 
+import { finalizeRoomController } from "../controllers/finalization.controller.js";
+
 const roomRouter = Router();
 
 roomRouter.post("/", createRoomController);
@@ -48,5 +50,11 @@ roomRouter.post(
   setVoteController,
 );
 roomRouter.get("/:roomId/votes", requireRoomParticipant, getVotesController);
+roomRouter.post(
+  "/:roomId/finalize",
+  requireFrontendOrigin,
+  requireRoomParticipant,
+  finalizeRoomController,
+);
 
 export default roomRouter;
