@@ -45,7 +45,9 @@ model Participant {
   room       Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
   sessions   ParticipantSession[]
   candidates PlaceCandidate[]
+  vote       PlaceVote?
 
+  @@unique([roomId, id])
   // 방장 중복 방지용 부분 유니크 인덱스는 migration.sql에서 관리합니다.
   @@index([roomId])
   @@map("participants")
@@ -78,8 +80,25 @@ model PlaceCandidate {
 
   room      Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
   createdBy Participant @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  votes     PlaceVote[]
 
+  @@unique([roomId, id])
   @@index([roomId, createdAt, id])
   @@index([createdById])
   @@map("place_candidates")
+}
+
+model PlaceVote {
+  roomId        String   @db.Uuid
+  participantId String   @db.Uuid
+  candidateId   String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  participant Participant    @relation(fields: [roomId, participantId], references: [roomId, id], onDelete: Cascade, onUpdate: Cascade)
+  candidate   PlaceCandidate @relation(fields: [roomId, candidateId], references: [roomId, id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([roomId, participantId])
+  @@index([roomId, candidateId])
+  @@map("place_votes")
 }
