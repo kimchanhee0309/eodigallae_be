@@ -14,6 +14,11 @@ import {
 import { requireRoomParticipant } from "../middlewares/require-room-participant.js";
 import { requireFrontendOrigin } from "../middlewares/require-frontend-origin.js";
 
+import {
+  getVotesController,
+  setVoteController,
+} from "../controllers/vote.controller.js";
+
 const roomRouter = Router();
 
 roomRouter.post("/", createRoomController);
@@ -36,4 +41,12 @@ roomRouter.get(
   requireRoomParticipant,
   getCandidatesController,
 );
+roomRouter.post(
+  "/:roomId/votes",
+  requireFrontendOrigin,
+  requireRoomParticipant,
+  setVoteController,
+);
+roomRouter.get("/:roomId/votes", requireRoomParticipant, getVotesController);
+
 export default roomRouter;
