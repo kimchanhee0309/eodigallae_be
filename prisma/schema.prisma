@@ -21,16 +21,20 @@ enum ParticipantRole {
 }
 
 model Room {
-  id              String     @id @default(uuid()) @db.Uuid
-  name            String     @db.VarChar(40)
-  description     String     @default("") @db.VarChar(300)
-  status          RoomStatus @default(OPEN)
-  inviteTokenHash String     @unique @db.VarChar(64)
-  createdAt       DateTime   @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime   @updatedAt @db.Timestamptz(3)
+  id                   String     @id @default(uuid()) @db.Uuid
+  name                 String     @db.VarChar(40)
+  description          String     @default("") @db.VarChar(300)
+  status               RoomStatus @default(OPEN)
+  inviteTokenHash      String     @unique @db.VarChar(64)
+  finalizedCandidateId String?    @db.Uuid
+  finalizedAt          DateTime?  @db.Timestamptz(3)
+  createdAt            DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime   @updatedAt @db.Timestamptz(3)
 
   participants Participant[]
-  candidates   PlaceCandidate[]
+  candidates   PlaceCandidate[] @relation("RoomCandidates")
+
+  finalizedCandidate PlaceCandidate? @relation("FinalizedCandidate", fields: [id, finalizedCandidateId], references: [roomId, id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("rooms")
 }
@@ -78,9 +82,10 @@ model PlaceCandidate {
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
-  room      Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  createdBy Participant @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  votes     PlaceVote[]
+  room         Room        @relation("RoomCandidates", fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy    Participant @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  votes        PlaceVote[]
+  finalizedFor Room[]      @relation("FinalizedCandidate")
 
   @@unique([roomId, id])
   @@index([roomId, createdAt, id])

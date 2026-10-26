@@ -214,11 +214,16 @@ describe("방 상세 조회", () => {
     expect(Object.keys(response.body.data.room).sort()).toEqual([
       "createdAt",
       "description",
+      "finalizedAt",
+      "finalizedCandidate",
       "id",
       "name",
       "participantCount",
       "status",
     ]);
+
+    expect(response.body.data.room.finalizedAt).toBeNull();
+    expect(response.body.data.room.finalizedCandidate).toBeNull();
 
     expect(Object.keys(response.body.data.me).sort()).toEqual([
       "id",

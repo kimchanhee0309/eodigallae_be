@@ -76,5 +76,7 @@ export async function getRoomDetail(roomId: string) {
     status: room.status,
     createdAt: room.createdAt,
     participantCount: room._count.participants,
+    finalizedAt: room.finalizedAt,
+    finalizedCandidate: room.finalizedCandidate,
   };
 }

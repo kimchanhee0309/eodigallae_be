@@ -1,5 +1,7 @@
 import type { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../config/db.js";
+import { randomUUID } from "node:crypto";
+import { finalizedCandidateSelect } from "./finalization.model.js";
 
 type CreateRoomData = {
   name: string;
@@ -15,7 +17,10 @@ type CreateSessionData = {
 
 export function insertRoom(tx: Prisma.TransactionClient, data: CreateRoomData) {
   return tx.room.create({
-    data,
+    data: {
+      ...data,
+      id: randomUUID(),
+    },
     select: {
       id: true,
       name: true,
@@ -69,6 +74,10 @@ export function findRoomById(roomId: string) {
       description: true,
       status: true,
       createdAt: true,
+      finalizedAt: true,
+      finalizedCandidate: {
+        select: finalizedCandidateSelect,
+      },
 
       _count: {
         select: {
@@ -100,6 +109,7 @@ export async function lockRoomForUpdate(
       status: true,
       createdAt: true,
       inviteTokenHash: true,
+      finalizedCandidateId: true,
     },
   });
 }
