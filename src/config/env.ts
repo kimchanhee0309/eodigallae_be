@@ -1,24 +1,53 @@
 import "dotenv/config";
 import { z } from "zod";
 
-const envSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+const envSchema = z
+  .object({
+    PORT: z.coerce.number().int().min(1).max(65535).default(4000),
 
-  DATABASE_URL: z
-    .string()
-    .url()
-    .refine(
-      (value) =>
-        value.startsWith("postgresql://") || value.startsWith("postgres://"),
-      "PostgreSQL 연결 URL이어야 합니다.",
-    ),
+    DATABASE_URL: z
+      .string()
+      .url()
+      .refine(
+        (value) =>
+          value.startsWith("postgresql://") || value.startsWith("postgres://"),
+        "PostgreSQL 연결 URL이어야 합니다.",
+      ),
 
-  NODE_ENV: z
-    .enum(["development", "test", "production"])
-    .default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
 
-  FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
-});
+    FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
+
+    CACHE_ENABLED: z.enum(["true", "false"]).default("false"),
+
+    REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.CACHE_ENABLED !== "true") {
+      return;
+    }
+
+    if (!value.REDIS_URL) {
+      context.addIssue({
+        code: "custom",
+        path: ["REDIS_URL"],
+        message: "캐시 사용 시 REDIS_URL이 필요합니다.",
+      });
+    }
+
+    if (
+      value.NODE_ENV === "production" &&
+      value.REDIS_URL?.startsWith("redis://")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["REDIS_URL"],
+        message: "운영 환경에서는 TLS 연결이 필요합니다.",
+      });
+    }
+  });
 
 const result = envSchema.safeParse(process.env);
 
@@ -35,4 +64,6 @@ export const env = {
   databaseUrl: result.data.DATABASE_URL,
   nodeEnv: result.data.NODE_ENV,
   frontendOrigin: new URL(result.data.FRONTEND_ORIGIN).origin,
+  cacheEnabled: result.data.CACHE_ENABLED === "true",
+  redisUrl: result.data.REDIS_URL,
 };

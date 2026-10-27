@@ -11,7 +11,10 @@
     "start": "node dist/server.js",
     "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:coverage": "npm test -- --coverage",
-    "test:integration": "npm run build && node scripts/run-db-tests.mjs"
+    "test:integration": "npm run build && node scripts/run-db-tests.mjs",
+    "test:redis": "npm run build && node scripts/run-redis-tests.mjs",
+    "test:cache": "npm run build && node scripts/run-cache-tests.mjs",
+    "benchmark:cache": "npm run build && node scripts/run-cache-tests.mjs benchmark"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +28,7 @@
     "dotenv": "^18.0.8",
     "express": "^5.3.0",
     "pg": "^8.23.1",
+    "redis": "^6.3.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

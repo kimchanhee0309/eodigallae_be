@@ -16,12 +16,14 @@ import { generateToken, hashToken, matchesToken } from "../utils/token.js";
 
 import type { JoinRoomInput } from "../validators/room.schema.js";
 
+import { invalidateRoomDetailCache } from "../cache/room-cache.js";
+
 export async function joinRoom(
   roomId: string,
   input: JoinRoomInput,
   existingToken?: string,
 ) {
-  return prisma.$transaction(
+  const result = await prisma.$transaction(
     async (tx) => {
       const room = await lockRoomForUpdate(tx, roomId);
 
@@ -92,4 +94,10 @@ export async function joinRoom(
       timeout: 10_000,
     },
   );
+
+  if (result.created) {
+    await invalidateRoomDetailCache(roomId);
+  }
+
+  return result;
 }
