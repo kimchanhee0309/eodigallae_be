@@ -13,6 +13,8 @@ import {
 import { generateToken, hashToken } from "../utils/token.js";
 import type { CreateRoomInput } from "../validators/room.schema.js";
 
+import { getCachedRoomDetail } from "../cache/room-cache.js";
+
 export async function createRoom(input: CreateRoomInput) {
   const inviteToken = generateToken();
   const sessionToken = generateToken();
@@ -63,20 +65,22 @@ export async function createRoom(input: CreateRoomInput) {
 }
 
 export async function getRoomDetail(roomId: string) {
-  const room = await findRoomById(roomId);
+  return getCachedRoomDetail(roomId, async () => {
+    const room = await findRoomById(roomId);
 
-  if (!room) {
-    throw new AppError(404, "ROOM_NOT_FOUND", "모임을 찾을 수 없습니다.");
-  }
+    if (!room) {
+      throw new AppError(404, "ROOM_NOT_FOUND", "모임을 찾을 수 없습니다.");
+    }
 
-  return {
-    id: room.id,
-    name: room.name,
-    description: room.description,
-    status: room.status,
-    createdAt: room.createdAt,
-    participantCount: room._count.participants,
-    finalizedAt: room.finalizedAt,
-    finalizedCandidate: room.finalizedCandidate,
-  };
+    return {
+      id: room.id,
+      name: room.name,
+      description: room.description,
+      status: room.status,
+      createdAt: room.createdAt.toISOString(),
+      participantCount: room._count.participants,
+      finalizedAt: room.finalizedAt?.toISOString() ?? null,
+      finalizedCandidate: room.finalizedCandidate,
+    };
+  });
 }

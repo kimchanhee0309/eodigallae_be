@@ -12,12 +12,14 @@ import { lockRoomForUpdate } from "../models/room.model.js";
 
 import type { FinalizeRoomInput } from "../validators/finalization.schema.js";
 
+import { invalidateRoomDetailCache } from "../cache/room-cache.js";
+
 export async function finalizeRoom(
   roomId: string,
   participantId: string,
   input: FinalizeRoomInput,
 ) {
-  return prisma.$transaction(
+  const result = await prisma.$transaction(
     async (tx) => {
       const room = await lockRoomForUpdate(tx, roomId);
 
@@ -89,4 +91,8 @@ export async function finalizeRoom(
       isolationLevel: "ReadCommitted",
     },
   );
+
+  await invalidateRoomDetailCache(roomId);
+
+  return result;
 }

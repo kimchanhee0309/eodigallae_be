@@ -50,11 +50,13 @@ export const getRoomController: RequestHandler = async (_req, res) => {
     );
   }
 
-  const room = await getRoomDetail(auth.roomId);
+  const result = await getRoomDetail(auth.roomId);
+
+  res.setHeader("X-Cache", result.cacheStatus);
 
   res.status(200).json({
     data: {
-      room,
+      room: result.data,
       me: auth.participant,
     },
   });
