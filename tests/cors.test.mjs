@@ -45,4 +45,22 @@ describe("브라우저 출처 설정", () => {
 
     expect(response.headers["set-cookie"]).toBeUndefined();
   });
+
+  it("허용한 출처에 Retry-After 응답 헤더를 공개한다", async () => {
+    const response = await request(app)
+      .get("/api/rooms/not-a-uuid")
+      .set("Origin", env.frontendOrigin);
+
+    expect(response.headers["access-control-allow-origin"]).toBe(
+      env.frontendOrigin,
+    );
+
+    const exposedHeaders = (
+      response.headers["access-control-expose-headers"] ?? ""
+    )
+      .split(",")
+      .map((header) => header.trim().toLowerCase());
+
+    expect(exposedHeaders).toContain("retry-after");
+  });
 });
