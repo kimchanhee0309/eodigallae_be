@@ -27,4 +27,6 @@ export const corsMiddleware = cors({
   methods: ["GET", "POST", "OPTIONS"],
 
   allowedHeaders: ["Content-Type"],
+
+  exposedHeaders: ["Retry-After"],
 });
