@@ -21,11 +21,21 @@ import {
 
 import { finalizeRoomController } from "../controllers/finalization.controller.js";
 
+import {
+  createRoomRateLimiter,
+  joinRoomRateLimiter,
+} from "../middlewares/room-rate-limit.js";
+
 const roomRouter = Router();
 
-roomRouter.post("/", createRoomController);
+roomRouter.post("/", createRoomRateLimiter, createRoomController);
 roomRouter.get("/:roomId", requireRoomParticipant, getRoomController);
-roomRouter.post("/:roomId/join", requireFrontendOrigin, joinRoomController);
+roomRouter.post(
+  "/:roomId/join",
+  requireFrontendOrigin,
+  joinRoomController,
+  joinRoomRateLimiter,
+);
 roomRouter.post(
   "/:roomId/invite/rotate",
   requireFrontendOrigin,
