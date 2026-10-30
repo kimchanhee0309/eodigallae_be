@@ -3,7 +3,7 @@ import { createClient } from "redis";
 import { env } from "./env.js";
 
 export const redisClient =
-  env.cacheEnabled && env.redisUrl
+  (env.cacheEnabled || env.rateLimitEnabled) && env.redisUrl
     ? createClient({
         url: env.redisUrl,
 
@@ -26,7 +26,7 @@ function warnOnce() {
 
   warned = true;
 
-  console.warn("Redis를 사용할 수 없어 캐시 조회를 건너뜁니다.");
+  console.warn("Redis 연결을 사용할 수 없습니다.");
 }
 
 redisClient?.on("error", warnOnce);

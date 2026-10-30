@@ -10,7 +10,7 @@ import type { RoomCacheData } from "./room-cache.schema.js";
 const TTL_SECONDS = 15;
 
 const sharedCache = new JsonCache(
-  redisClient
+  env.cacheEnabled && redisClient
     ? new RedisCacheStore(
         redisClient.withCommandOptions({
           timeout: 300,
@@ -30,7 +30,7 @@ function roomCacheKey(roomId: string) {
 export async function invalidateRoomDetailCache(
   roomId: string,
 ): Promise<boolean> {
-  if (!redisClient) {
+  if (!env.cacheEnabled || !redisClient) {
     return true;
   }
 
@@ -55,7 +55,7 @@ export async function getCachedRoomDetail(
   roomId: string,
   load: () => Promise<RoomCacheData>,
 ) {
-  let canUseCache = redisClient?.isReady === true;
+  let canUseCache = env.cacheEnabled && redisClient?.isReady === true;
 
   if (canUseCache && pendingInvalidations.has(roomId)) {
     canUseCache = await invalidateRoomDetailCache(roomId);

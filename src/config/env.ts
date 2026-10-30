@@ -22,10 +22,12 @@ const envSchema = z
 
     CACHE_ENABLED: z.enum(["true", "false"]).default("false"),
 
+    RATE_LIMIT_ENABLED: z.enum(["true", "false"]).default("false"),
+
     REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
   })
   .superRefine((value, context) => {
-    if (value.CACHE_ENABLED !== "true") {
+    if (value.CACHE_ENABLED !== "true" && value.RATE_LIMIT_ENABLED !== "true") {
       return;
     }
 
@@ -33,7 +35,7 @@ const envSchema = z
       context.addIssue({
         code: "custom",
         path: ["REDIS_URL"],
-        message: "캐시 사용 시 REDIS_URL이 필요합니다.",
+        message: "Redis 기능 사용 시 REDIS_URL이 필요합니다.",
       });
     }
 
@@ -66,4 +68,5 @@ export const env = {
   frontendOrigin: new URL(result.data.FRONTEND_ORIGIN).origin,
   cacheEnabled: result.data.CACHE_ENABLED === "true",
   redisUrl: result.data.REDIS_URL,
+  rateLimitEnabled: result.data.RATE_LIMIT_ENABLED === "true",
 };
