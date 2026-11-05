@@ -45,5 +45,5 @@ function shutdown() {
   timer.unref();
 }
 
-process.once("SIGNIN", shutdown);
+process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);
