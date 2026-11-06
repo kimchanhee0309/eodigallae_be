@@ -23,6 +23,7 @@ describe("장소 후보 입력 검증", () => {
       address: "서울특별시 마포구",
       mapUrl: "https://map.naver.com/",
       memo: "대화하기 좋아요.",
+      menus: [],
     });
   });
 
@@ -34,6 +35,7 @@ describe("장소 후보 입력 검증", () => {
 
     expect(result.mapUrl).toBeNull();
     expect(result.memo).toBe("");
+    expect(result.menus).toEqual([]);
   });
 
   it.each(["", "   ", null])(

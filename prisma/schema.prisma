@@ -82,10 +82,11 @@ model PlaceCandidate {
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
-  room         Room        @relation("RoomCandidates", fields: [roomId], references: [id], onDelete: Cascade)
-  createdBy    Participant @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  room         Room            @relation("RoomCandidates", fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy    Participant     @relation(fields: [createdById], references: [id], onDelete: Restrict)
   votes        PlaceVote[]
-  finalizedFor Room[]      @relation("FinalizedCandidate")
+  finalizedFor Room[]          @relation("FinalizedCandidate")
+  menus        CandidateMenu[]
 
   @@unique([roomId, id])
   @@index([roomId, createdAt, id])
@@ -106,4 +107,19 @@ model PlaceVote {
   @@id([roomId, participantId])
   @@index([roomId, candidateId])
   @@map("place_votes")
+}
+
+model CandidateMenu {
+  id          String   @id @default(uuid()) @db.Uuid
+  candidateId String   @db.Uuid
+  name        String   @db.VarChar(100)
+  price       Int?
+  priceBasis  String   @db.VarChar(30)
+  position    Int      @db.SmallInt
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  candidate PlaceCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, position])
+  @@map("candidate_menus")
 }
