@@ -17,6 +17,18 @@ const candidateSelect = {
       nickname: true,
     },
   },
+
+  menus: {
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      priceBasis: true,
+    },
+    orderBy: {
+      position: "asc",
+    },
+  },
 } satisfies Prisma.PlaceCandidateSelect;
 
 export function findCandidateAuthor(
@@ -60,6 +72,15 @@ export function insertCandidate(
       address: input.address,
       mapUrl: input.mapUrl,
       memo: input.memo,
+
+      menus: {
+        create: input.menus.map((menu, position) => ({
+          name: menu.name,
+          price: menu.price,
+          priceBasis: menu.priceBasis,
+          position,
+        })),
+      },
     },
     select: candidateSelect,
   });

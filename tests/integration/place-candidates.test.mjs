@@ -14,6 +14,7 @@ import request from "supertest";
 import app from "../../dist/app.js";
 import { prisma } from "../../dist/config/db.js";
 import { env } from "../../dist/config/env.js";
+import { insertCandidate } from "../../dist/models/candidate.model.js";
 
 const prefix = `cand-${randomUUID().slice(0, 8)}-`;
 
@@ -199,11 +200,12 @@ describe("장소 후보 등록 및 조회", () => {
       "id",
       "mapUrl",
       "memo",
+      "menus",
       "name",
       "updatedAt",
     ]);
 
-    expect(Object.keys(candidate.createdBy).sort()).toEqual(["id", "nickname"]);
+    expect(candidate.menus).toEqual([]);
   });
 
   it("일반 참여자도 자신의 이름으로 등록하고 조회한다", async () => {
@@ -446,5 +448,139 @@ describe("장소 후보 등록 및 조회", () => {
 
     expect(listed.status).toBe(200);
     expect(listed.body.data.candidates).toHaveLength(50);
+  });
+
+  it("메뉴를 함께 저장하고 입력 순서대로 조회한다", async () => {
+    const room = await createRoom("menus");
+
+    const menus = [
+      {
+        name: "아메리카노",
+        price: 5000,
+        priceBasis: "1잔",
+      },
+      {
+        name: "시즌 케이크",
+        price: null,
+        priceBasis: "1조각",
+      },
+    ];
+
+    const response = await postCandidate(room, { menus });
+
+    expect(response.status).toBe(201);
+
+    const candidate = response.body.data.candidate;
+
+    expect(candidate.menus).toEqual(
+      menus.map((menu) => ({
+        id: expect.any(String),
+        ...menu,
+      })),
+    );
+
+    const savedMenus = await prisma.candidateMenu.findMany({
+      where: {
+        candidateId: candidate.id,
+      },
+      orderBy: {
+        position: "asc",
+      },
+    });
+
+    expect(
+      savedMenus.map(({ name, price, priceBasis, position }) => ({
+        name,
+        price,
+        priceBasis,
+        position,
+      })),
+    ).toEqual(
+      menus.map((menu, position) => ({
+        ...menu,
+        position,
+      })),
+    );
+
+    const listed = await getCandidates(room);
+
+    expect(listed.status).toBe(200);
+    expect(listed.body.data.candidates[0].menus).toEqual(candidate.menus);
+  });
+
+  it.each([
+    [
+      "음수 가격",
+      [
+        {
+          name: "잘못된 메뉴",
+          price: -1,
+          priceBasis: "1개",
+        },
+      ],
+    ],
+    [
+      "메뉴 개수 초과",
+      Array.from({ length: 4 }, () => ({
+        name: "메뉴",
+        price: 5000,
+        priceBasis: "1개",
+      })),
+    ],
+  ])("%s 요청은 장소와 메뉴 모두 저장하지 않는다", async (_label, menus) => {
+    const room = await createRoom("invalid-menu");
+
+    const response = await postCandidate(room, { menus });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+
+    expect(await countCandidates(room.roomId)).toBe(0);
+
+    expect(
+      await prisma.candidateMenu.count({
+        where: {
+          candidate: {
+            roomId: room.roomId,
+          },
+        },
+      }),
+    ).toBe(0);
+  });
+
+  it("메뉴의 DB 제약 위반 시 장소 후보도 롤백한다", async () => {
+    const room = await createRoom("menu-roolback");
+
+    await expect(
+      prisma.$transaction((tx) =>
+        insertCandidate(tx, room.roomId, room.hostId, {
+          ...validInput,
+          menus: [
+            {
+              name: "정상 메뉴",
+              price: 5000,
+              priceBasis: "1개",
+            },
+            {
+              name: "DB에서 거절할 메뉴",
+              price: -1,
+              priceBasis: "1개",
+            },
+          ],
+        }),
+      ),
+    ).rejects.toThrow();
+
+    expect(await countCandidates(room.roomId)).toBe(0);
+
+    expect(
+      await prisma.candidateMenu.count({
+        where: {
+          candidate: {
+            roomId: room.roomId,
+          },
+        },
+      }),
+    ).toBe(0);
   });
 });
