@@ -7,6 +7,7 @@ import { AppError } from "./errors/AppError.js";
 import { errorHandler } from "./middlewares/error-handler.js";
 import healthRouter from "./routes/health.routes.js";
 import roomRouter from "./routes/room.routes.js";
+import authRouter from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(cookieParser());
 
 app.use(express.json({ limit: "10kb" }));
 app.use("/api/health", healthRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/rooms", roomRouter);
 
 app.use((_req, _res, next) => {
